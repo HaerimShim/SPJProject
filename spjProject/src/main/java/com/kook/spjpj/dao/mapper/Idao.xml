@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<!-- SQL Mapper 작성방법 참고
+	: https://atoz-develop.tistory.com/entry/MyBatis-%EC%84%A4%EC%A0%95-
+	%ED%8C%8C%EC%9D%BC-SQL-Mapper-%EC%9E%91%EC%84%B1-%EB%B0%A9%EB%B2%95
+	 -->
+<mapper namespace = "com.kook.spjpj.dao.Dao">
+<!-- <mapper>의 namespace 속성은 자바의 패키지처럼 여러개의 SQL문을 묶는 용도. -->
+
+
+	<!-- join -->
+	<insert id="join" parameterType="com.kook.spjpj.dto.JoinDto">
+	<!-- id: 각 SQL문을 구분 -->
+	<!-- parameterType: 이 속성에 지정한 객체의 프로퍼티값이 SQL문의 입력 파라미터에 지정된다. -->
+	<!-- MyBatis에서는 입력 파라미터를 '#{프로퍼티}'로 표시한다. -->
+		INSERT INTO SPJDB(pid, ppw, pname, pbirth, pprofile) 
+		VALUES (#{pid}, #{ppw}, #{pname}, #{pbirth}, #{pprofile})
+	</insert>
+	
+	<!-- login -->
+	<select id="login" parameterType="String" resultType="com.kook.spjpj.dto.JoinDto">
+		SELECT * FROM SPJDB 
+		WHERE pid = #{pid}
+	</select>	
+	
+	
+	<!--  board  -->
+	<!--  ![CDATA는 태드에서 사용하는 특수 문자를 sql에서 사용시 이를 sql의 문자로 처리  -->
+	<!--  rownum은 가상 행번호  -->
+	<!--  A는 실제 테이블에서 select한 가상테이블인데 가상행번호가 추가된 테이블이다  -->
+	<select id="list" resultType="com.kook.spjpj.dto.BDto">
+		<![CDATA[ SELECT * FROM(SELECT A.*, ROWNUM AS RNUM FROM 
+		(SELECT * FROM SPJ_BOARD ORDER BY bgroup DESC, bstep ASC)A) 
+		WHERE rnum < 8 ]]>
+	</select>
+	
+	<insert id="write" parameterType="com.kook.spjpj.dto.BDto"> 
+		INSERT INTO SPJ_BOARD (bid, buser, btitle, bcontent, bhit, bgroup, bstep, bindent) 
+		VALUES (SPJ_BOARD1.nextval, #{buser}, #{btitle}, #{bcontent}, 0, SPJ_BOARD1.currval, 0, 0) 
+	</insert>
+	
+	<select id="contentView" parameterType="int" resultType="com.kook.spjpj.dto.BDto" >
+		SELECT * FROM SPJ_BOARD 
+		WHERE bid = #{bid}
+	</select>	
+	
+	<update id="upHit" parameterType="int">
+		UPDATE SPJ_BOARD SET BHIT = BHIT + 1 
+		WHERE bid = #{bid}
+	</update>
+	
+	<update id="modify" parameterType="com.kook.spjpj.dto.BDto">
+		UPDATE SPJ_BOARD 
+		SET btitle = #{btitle}, bcontent = #{bcontent}
+		WHERE bid = #{bid}
+
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		DELETE FROM SPJ_BOARD 
+		WHERE bid = #{bid}
+	</delete>
+	
+	<select id="pageList" parameterType="int" resultType="com.kook.spjpj.dto.BDto">
+		<![CDATA[
+			SELECT * FROM(SELECT A.*,ROWNUM AS RNUM
+			FROM(SELECT * FROM SPJ_BOARD ORDER BY bgroup DESC,bstep ASC)A)
+			WHERE RNUM >= #{start} AND RNUM <= #{start} + 9
+		]]>
+	</select>
+	
+	
+	
+	<insert id="record" parameterType="com.kook.spjpj.dto.RDto">
+		INSERT INTO SPJ_RECORD1 (rcompany, ruser, rtime_from, rtime_to, rtime_day, rwage_hour, rwage_day)
+		VALUES (#{rcompany}, #{ruser}, #{rtime_from}, #{rtime_to}, #{rtime_day}, #{rwage_hour}, #{rwage_day})
+
+	</insert>
+	
+
+	<select id="wageBill" parameterType="String" resultType="com.kook.spjpj.dto.RDto">
+		SELECT * FROM SPJ_RECORD1 
+		WHERE RUSER = #{user}
+		ORDER BY rcompany ASC, rtime_from ASC		
+	</select>
+	
+</mapper>
